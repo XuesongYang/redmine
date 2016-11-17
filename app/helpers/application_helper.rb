@@ -197,6 +197,8 @@ module ApplicationHelper
       l(:general_text_No)
     when 'Issue'
       object.visible? && html ? link_to_issue(object) : "##{object.id}"
+    when 'Attachment'
+      html ? link_to_attachment(object, :download => true) : object.filename
     when 'CustomValue', 'CustomFieldValue'
       if object.custom_field
         f = object.custom_field.format.formatted_custom_value(self, object, html)
@@ -230,8 +232,9 @@ module ApplicationHelper
     link_to(name, "#", :onclick => onclick)
   end
 
+  # Used to format item titles on the activity view
   def format_activity_title(text)
-    h(truncate_single_line_raw(text, 100))
+    text
   end
 
   def format_activity_day(date)
@@ -1162,7 +1165,7 @@ module ApplicationHelper
     end
   end
 
-  def context_menu(url)
+  def context_menu
     unless @context_menu_included
       content_for :header_tags do
         javascript_include_tag('context_menu') +
@@ -1175,7 +1178,7 @@ module ApplicationHelper
       end
       @context_menu_included = true
     end
-    javascript_tag "contextMenuInit('#{ url_for(url) }')"
+    nil
   end
 
   def calendar_for(field_id)

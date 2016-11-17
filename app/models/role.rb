@@ -98,6 +98,7 @@ class Role < ActiveRecord::Base
       'users_visibility',
       'time_entries_visibility',
       'all_roles_managed',
+      'managed_role_ids',
       'permissions',
       'permissions_all_trackers',
       'permissions_tracker_ids'
@@ -108,6 +109,7 @@ class Role < ActiveRecord::Base
     role = arg.is_a?(Role) ? arg : Role.find_by_id(arg.to_s)
     self.attributes = role.attributes.dup.except("id", "name", "position", "builtin", "permissions")
     self.permissions = role.permissions.dup
+    self.managed_role_ids = role.managed_role_ids.dup
     self
   end
 

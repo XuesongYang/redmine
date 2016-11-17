@@ -45,7 +45,8 @@ class TimelogController < ApplicationController
     sort_init(@query.sort_criteria.empty? ? [['spent_on', 'desc']] : @query.sort_criteria)
     sort_update(@query.sortable_columns)
     scope = time_entry_scope(:order => sort_clause).
-      preload(:issue => [:project, :tracker, :status, :assigned_to, :priority])
+      preload(:issue => [:project, :tracker, :status, :assigned_to, :priority]).
+      preload(:project, :user)
 
     respond_to do |format|
       format.html {
@@ -168,7 +169,7 @@ class TimelogController < ApplicationController
 
   def bulk_edit
     @available_activities = TimeEntryActivity.shared.active
-    @custom_fields = TimeEntry.first.available_custom_fields
+    @custom_fields = TimeEntry.first.available_custom_fields.select {|field| field.format.bulk_edit_supported}
   end
 
   def bulk_update
@@ -230,7 +231,7 @@ private
   end
 
   def find_time_entries
-    @time_entries = TimeEntry.where(:id => params[:id] || params[:ids]).to_a
+    @time_entries = TimeEntry.where(:id => params[:id] || params[:ids]).preload(:project, :user).to_a
     raise ActiveRecord::RecordNotFound if @time_entries.empty?
     raise Unauthorized unless @time_entries.all? {|t| t.editable_by?(User.current)}
     @projects = @time_entries.collect(&:project).compact.uniq

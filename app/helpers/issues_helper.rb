@@ -90,7 +90,7 @@ module IssuesHelper
   end
 
   def render_descendants_tree(issue)
-    s = '<form><table class="list issues">'
+    s = '<table class="list issues">'
     issue_list(issue.descendants.visible.preload(:status, :priority, :tracker, :assigned_to).sort_by(&:lft)) do |child, level|
       css = "issue issue-#{child.id} hascontextmenu #{child.css_classes}"
       css << " idnt idnt-#{level}" if level > 0
@@ -102,7 +102,7 @@ module IssuesHelper
              content_tag('td', child.disabled_core_fields.include?('done_ratio') ? '' : progress_bar(child.done_ratio), :class=> 'done_ratio'),
              :class => css)
     end
-    s << '</table></form>'
+    s << '</table>'
     s.html_safe
   end
 
@@ -329,6 +329,7 @@ module IssuesHelper
   def show_detail(detail, no_html=false, options={})
     multiple = false
     show_diff = false
+    no_details = false
 
     case detail.property
     when 'attr'
@@ -364,7 +365,9 @@ module IssuesHelper
       custom_field = detail.custom_field
       if custom_field
         label = custom_field.name
-        if custom_field.format.class.change_as_diff
+        if custom_field.format.class.change_no_details
+          no_details = true
+        elsif custom_field.format.class.change_as_diff
           show_diff = true
         else
           multiple = custom_field.multiple?
@@ -417,7 +420,9 @@ module IssuesHelper
       end
     end
 
-    if show_diff
+    if no_details
+      s = l(:text_journal_changed_no_detail, :label => label).html_safe
+    elsif show_diff
       s = l(:text_journal_changed_no_detail, :label => label)
       unless no_html
         diff_link = link_to 'diff',
